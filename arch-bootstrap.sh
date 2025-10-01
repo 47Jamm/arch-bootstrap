@@ -6,11 +6,12 @@ USERNAME="RenZu"
 HOSTNAME="RyzenSun"
 DOTFILES_REPO="https://github.com/47Jamm/dotfiles.git"
 XDG_CONFIG_HOME="/home/$USERNAME/.config"
-WALLPAPER_URL="https://w.wallhaven.cc/full/zy/wallhaven-zyx123.jpg"  # change this!
+WALLPAPER_URL="https://picsum.photos/2560/1440" # Example wallpaper URL
 WALLPAPER_PATH="$XDG_CONFIG_HOME/hypr/wallpaper.jpg"
 
 ### === SYSTEM SETUP === ###
 echo "==> Setting hostname..."
+# Optional, only if not already set in pre-install
 sudo hostnamectl set-hostname "$HOSTNAME"
 
 echo "==> Updating system..."
@@ -32,39 +33,31 @@ sudo pacman -S --needed --noconfirm \
   xdg-desktop-portal xdg-desktop-portal-wlr \
   gvfs gvfs-mtp \
   ttf-jetbrains-mono ttf-font-awesome noto-fonts ttf-inconsolata \
-  wl-clipboard grim slurp swaybg dunst \
+  wl-clipboard grim slurp swaybg \
   starship \
   zsh-autosuggestions zsh-syntax-highlighting \
-  base-devel \
-  go \
-  tmux
-
-tmux
+  base-devel go tmux
 
 ### === NETWORKMANAGER & NM-APPLET SETUP === ###
 echo "==> Enabling NetworkManager service..."
 sudo systemctl enable NetworkManager
 
-echo "==> Setting up nm-applet to autostart in Openbox..."
 OB_AUTOSTART="/home/$USERNAME/.config/openbox/autostart"
-mkdir -p "$(dirname "$OB_AUTOSTART")"
-if ! grep -Fxq "nm-applet &" "$OB_AUTOSTART" 2>/dev/null; then
-    echo "nm-applet &" >> "$OB_AUTOSTART"
-fi
-
-echo "==> Setting up nm-applet to autostart in Hyprland..."
 HYPR_AUTOSTART="/home/$USERNAME/.config/hypr/autostart.sh"
-mkdir -p "$(dirname "$HYPR_AUTOSTART")"
-if ! grep -Fxq "nm-applet &" "$HYPR_AUTOSTART" 2>/dev/null; then
-    echo "nm-applet &" >> "$HYPR_AUTOSTART"
-fi
+mkdir -p "$(dirname "$OB_AUTOSTART")" "$(dirname "$HYPR_AUTOSTART")"
+
+# Autostart nm-applet
+for file in "$OB_AUTOSTART" "$HYPR_AUTOSTART"; do
+    if ! grep -Fxq "nm-applet &" "$file" 2>/dev/null; then
+        echo "nm-applet &" >> "$file"
+    fi
+done
 
 sudo -u "$USERNAME" chmod +x "$OB_AUTOSTART" "$HYPR_AUTOSTART"
 
-
 echo "==> Enabling PipeWire (user-level)..."
 loginctl enable-linger "$USERNAME"
-systemctl --user enable --now pipewire pipewire-pulse wireplumber || echo "Will start after login."
+sudo -u "$USERNAME" systemctl --user enable --now pipewire pipewire-pulse wireplumber || echo "Will start after login."
 
 echo "==> Setting Zsh as default shell..."
 chsh -s /bin/zsh "$USERNAME"
@@ -72,23 +65,24 @@ chsh -s /bin/zsh "$USERNAME"
 ### === SETUP GREETD === ###
 echo "==> Configuring greetd with GTKGreet and GB keyboard..."
 sudo mkdir -p /etc/greetd
-sudo tee /etc/greetd/config.toml > /dev/null <<'GREETD'
+sudo tee /etc/greetd/config.toml > /dev/null <<GREETD
 [terminal]
 vt = 1
 
-[default_session]
-# Launch Hyprland by default
-command = "Hyprland"
-user = "USERNAME"
+[sessions.hyprland]
+command = "setxkbmap gb && Hyprland"
+user = "$USERNAME"
+
+[sessions.openbox]
+command = "openbox-session"
+user = "$USERNAME"
 
 [greeter]
-# Use GTKGreet as greeter
 path = "/usr/bin/gtkgreet"
-user = "USERNAME"
+user = "$USERNAME"
 GREETD
 
 sudo systemctl enable greetd
-
 
 ### === SETUP RANGER IMAGE PREVIEW === ###
 echo "==> Configuring ranger image preview..."
@@ -128,7 +122,6 @@ fi
 echo "==> Using stow to symlink dotfiles..."
 cd "/home/$USERNAME/dotfiles"
 
-# Map configs to their corresponding programs
 declare -A CONFIG_MAP=(
   [zsh]="zsh"
   [starship]="starship"
@@ -137,7 +130,6 @@ declare -A CONFIG_MAP=(
   [openbox]="openbox"
   [waybar]="waybar"
   [wofi]="wofi"
-  [dunst]="dunst"
   [alacritty]="alacritty"
   [git]="git"
 )
@@ -189,9 +181,46 @@ Type=Application
 EOF
 
 echo "==> Adding Openbox to Hyprland autostart..."
-echo "openbox &" >> "/home/$USERNAME/.config/hypr/autostart.sh"
-sudo -u "$USERNAME" chmod +x "/home/$USERNAME/.config/hypr/autostart.sh"
+echo "openbox &" >> "$HYPR_AUTOSTART"
+sudo -u "$USERNAME" chmod +x "$HYPR_AUTOSTART"
 
+### === INSTALL NOTIFICATIONS AND TMUX ALTERNATIVE === ###
+echo "==> Installing Mako (Wayland-native notifications) and Byobu..."
+sudo pacman -S --needed --noconfirm mako byobu
 
-### === DONE === ###
-echo "==> Bootstrap complete. Reboot to enjoy your new system!"
+# Autostart Mako
+for file in "$OB_AUTOSTART" "$HYPR_AUTOSTART"; do
+    if ! grep -Fxq "mako &" "$file" 2>/dev/null; then
+        echo "mako &" >> "$file"
+    fi
+done
+
+sudo -u "$USERNAME" chmod +x "$OB_AUTOSTART" "$HYPR_AUTOSTART"
+
+### === INSTALL EXTRA UTILITIES === ###
+echo "==> Installing system utilities..."
+sudo pacman -S --needed --noconfirm \
+    neofetch htop bat ripgrep fd exfat-utils ntfs-3g wlogout fzf autojump \
+    roboto fira-code ttf-cascadia-code noto-fonts-emoji
+
+# Configure fzf and autojump in Zsh
+for plugin in "fzf" "autojump"; do
+    case $plugin in
+        fzf)
+            LINE="[ -f /usr/share/fzf/key-bindings.zsh ] && source /usr/share/fzf/key-bindings.zsh"
+            ;;
+        autojump)
+            LINE="[ -f /usr/share/autojump/autojump.zsh ] && source /usr/share/autojump/autojump.zsh"
+            ;;
+    esac
+    if ! grep -Fxq "$LINE" "$ZSHRC"; then
+        echo "$LINE" >> "$ZSHRC"
+    fi
+done
+
+### === FIREFOX ADD-ONS SUGGESTIONS === ###
+echo "==> Reminder: Install Firefox add-ons:"
+echo "  - uBlock Origin"
+echo "  - Tree Style Tab"
+echo "  - HTTPS Everywhere (built-in)"
+echo "  - Pr

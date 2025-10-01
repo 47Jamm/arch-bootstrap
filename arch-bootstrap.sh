@@ -36,14 +36,16 @@ sudo pacman -S --needed --noconfirm \
   wl-clipboard grim slurp swaybg \
   starship \
   zsh-autosuggestions zsh-syntax-highlighting \
-  base-devel go tmux
+  base-devel go tmux byobu mako neofetch \
+  htop bat ripgrep fd exfat-utils ntfs-3g wlogout fzf autojump \
+  roboto fira-code ttf-cascadia-code noto-fonts-emoji
 
 ### === NETWORKMANAGER & NM-APPLET SETUP === ###
 echo "==> Enabling NetworkManager service..."
 sudo systemctl enable NetworkManager
 
-OB_AUTOSTART="/home/$USERNAME/.config/openbox/autostart"
-HYPR_AUTOSTART="/home/$USERNAME/.config/hypr/autostart.sh"
+OB_AUTOSTART="$XDG_CONFIG_HOME/openbox/autostart"
+HYPR_AUTOSTART="$XDG_CONFIG_HOME/hypr/autostart.sh"
 mkdir -p "$(dirname "$OB_AUTOSTART")" "$(dirname "$HYPR_AUTOSTART")"
 
 # Autostart nm-applet
@@ -53,12 +55,21 @@ for file in "$OB_AUTOSTART" "$HYPR_AUTOSTART"; do
     fi
 done
 
+# Autostart Mako
+for file in "$OB_AUTOSTART" "$HYPR_AUTOSTART"; do
+    if ! grep -Fxq "mako &" "$file" 2>/dev/null; then
+        echo "mako &" >> "$file"
+    fi
+done
+
 sudo -u "$USERNAME" chmod +x "$OB_AUTOSTART" "$HYPR_AUTOSTART"
 
+### === PIPEWIRE ENABLE === ###
 echo "==> Enabling PipeWire (user-level)..."
 loginctl enable-linger "$USERNAME"
 sudo -u "$USERNAME" systemctl --user enable --now pipewire pipewire-pulse wireplumber || echo "Will start after login."
 
+### === SET DEFAULT SHELL === ###
 echo "==> Setting Zsh as default shell..."
 chsh -s /bin/zsh "$USERNAME"
 
@@ -104,6 +115,15 @@ source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zs
 eval "\$(starship init zsh)"
 EOF
 
+# Configure fzf and autojump in Zsh
+LINE_FZF="[ -f /usr/share/fzf/key-bindings.zsh ] && source /usr/share/fzf/key-bindings.zsh"
+LINE_AUTJ="[ -f /usr/share/autojump/autojump.zsh ] && source /usr/share/autojump/autojump.zsh"
+for LINE in "$LINE_FZF" "$LINE_AUTJ"; do
+    if ! grep -Fxq "$LINE" "$ZSHRC"; then
+        echo "$LINE" >> "$ZSHRC"
+    fi
+done
+
 ### === INSTALL YAY (AUR HELPER) === ###
 if ! command -v yay &>/dev/null; then
   echo "==> Installing yay from AUR..."
@@ -141,7 +161,7 @@ for dir in *; do
   if [ -d "$dir" ]; then
     bin="${CONFIG_MAP[$dir]:-}"
     if [ -n "$bin" ]; then
-      if command -v "$bin" &>/dev/null; then
+      if command -v "$bin" &>/dev/null || [ "$bin" = "byobu" ]; then
         echo "==> Stowing $dir (program: $bin)..."
         stow --adopt "$dir"
       else
@@ -187,43 +207,13 @@ echo "==> Adding Openbox to Hyprland autostart..."
 echo "openbox &" >> "$HYPR_AUTOSTART"
 sudo -u "$USERNAME" chmod +x "$HYPR_AUTOSTART"
 
-### === INSTALL NOTIFICATIONS AND TMUX ALTERNATIVE === ###
-echo "==> Installing Mako (Wayland-native notifications) and Byobu..."
-sudo pacman -S --needed --noconfirm mako byobu
-
-# Autostart Mako
-for file in "$OB_AUTOSTART" "$HYPR_AUTOSTART"; do
-    if ! grep -Fxq "mako &" "$file" 2>/dev/null; then
-        echo "mako &" >> "$file"
-    fi
-done
-
-sudo -u "$USERNAME" chmod +x "$OB_AUTOSTART" "$HYPR_AUTOSTART"
-
-### === INSTALL EXTRA UTILITIES === ###
-echo "==> Installing system utilities..."
-sudo pacman -S --needed --noconfirm \
-    neofetch htop bat ripgrep fd exfat-utils ntfs-3g wlogout fzf autojump \
-    roboto fira-code ttf-cascadia-code noto-fonts-emoji
-
-# Configure fzf and autojump in Zsh
-for plugin in "fzf" "autojump"; do
-    case $plugin in
-        fzf)
-            LINE="[ -f /usr/share/fzf/key-bindings.zsh ] && source /usr/share/fzf/key-bindings.zsh"
-            ;;
-        autojump)
-            LINE="[ -f /usr/share/autojump/autojump.zsh ] && source /usr/share/autojump/autojump.zsh"
-            ;;
-    esac
-    if ! grep -Fxq "$LINE" "$ZSHRC"; then
-        echo "$LINE" >> "$ZSHRC"
-    fi
-done
-
-### === FIREFOX ADD-ONS SUGGESTIONS === ###
+### === FIREFOX ADD-ONS REMINDER === ###
 echo "==> Reminder: Install Firefox add-ons:"
 echo "  - uBlock Origin"
 echo "  - Tree Style Tab"
 echo "  - HTTPS Everywhere (built-in)"
-echo "  - Pr
+echo "  - Privacy Badger"
+echo "  - Decentraleyes"
+
+### === DONE === ###
+echo "==> Bootstrap complete. Reboot to enjoy your new system!"

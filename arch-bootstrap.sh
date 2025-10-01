@@ -68,29 +68,15 @@ chsh -s /bin/zsh "$USERNAME"
 ### === SETUP GREETD === ###
 echo "==> Configuring greetd with GTKGreet and GB keyboard..."
 sudo mkdir -p /etc/greetd
-sudo tee /etc/greetd/config.toml > /dev/null <<EOF
+sudo tee /etc/greetd/config.toml > /dev/null <<'GREETD'
 [terminal]
 vt = 1
 
 [default_session]
-command = "setxkbmap gb && Hyprland"
-user = "$USERNAME"
-
-[greeter]
-path = "/usr/bin/gtkgreet"
-user = "$USERNAME"
-EOF
-
-sudo systemctl enable greetd
-
-
-
-[default_session]
 command = "gtkgreet --cmd Hyprland"
 user = "$USERNAME"
-EOF
+GREETD
 
-sudo systemctl enable greetd
 
 ### === SETUP RANGER IMAGE PREVIEW === ###
 echo "==> Configuring ranger image preview..."

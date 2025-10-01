@@ -130,8 +130,11 @@ declare -A CONFIG_MAP=(
   [openbox]="openbox"
   [waybar]="waybar"
   [wofi]="wofi"
+  [mako]="mako"
+  [neofetch]="neofetch"
   [alacritty]="alacritty"
   [git]="git"
+  [byobu]="byobu"
 )
 
 for dir in *; do

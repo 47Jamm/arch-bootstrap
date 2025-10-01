@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ### === USER CONFIG === ###
-USERNAME="jamm"
+USERNAME="RenZu"
 HOSTNAME="RyzenSun"
 DOTFILES_REPO="https://github.com/47Jamm/dotfiles.git"
 XDG_CONFIG_HOME="/home/$USERNAME/.config"
@@ -150,6 +150,30 @@ tee "$XDG_CONFIG_HOME/hypr/hyprpaper.conf" > /dev/null <<EOF
 preload = $WALLPAPER_PATH
 wallpaper = ,$WALLPAPER_PATH
 EOF
+
+### === SETUP DISPLAY MANAGER SESSIONS === ###
+echo "==> Creating Openbox session file..."
+sudo tee /usr/share/xsessions/openbox.desktop > /dev/null <<EOF
+[Desktop Entry]
+Name=Openbox
+Comment=Lightweight X11 Window Manager
+Exec=openbox-session
+Type=Application
+EOF
+
+echo "==> Creating Hyprland session file..."
+sudo tee /usr/share/wayland-sessions/hyprland.desktop > /dev/null <<EOF
+[Desktop Entry]
+Name=Hyprland
+Comment=Wayland Compositor
+Exec=Hyprland
+Type=Application
+EOF
+
+echo "==> Adding Openbox to Hyprland autostart..."
+echo "openbox &" >> "/home/$USERNAME/.config/hypr/autostart.sh"
+sudo -u "$USERNAME" chmod +x "/home/$USERNAME/.config/hypr/autostart.sh"
+
 
 ### === DONE === ###
 echo "==> Bootstrap complete. Reboot to enjoy your new system!"

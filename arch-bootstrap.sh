@@ -20,7 +20,7 @@ echo "==> Installing essential packages..."
 sudo pacman -S --needed --noconfirm \
   git vim zsh bash wget curl unzip stow \
   alacritty \
-  networkmanager nm-applet \
+  networkmanager network-manager-applet \
   pipewire pipewire-pulse pipewire-alsa wireplumber \
   hyprland hyprpaper xorg-xwayland \
   openbox \

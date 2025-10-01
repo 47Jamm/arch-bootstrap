@@ -36,6 +36,7 @@ sudo pacman -S --needed --noconfirm \
   starship \
   zsh-autosuggestions zsh-syntax-highlighting \
   base-devel
+  go
 
 ### === NETWORKMANAGER & NM-APPLET SETUP === ###
 echo "==> Enabling NetworkManager service..."

@@ -77,9 +77,17 @@ sudo tee /etc/greetd/config.toml > /dev/null <<'GREETD'
 vt = 1
 
 [default_session]
-command = "gtkgreet --cmd Hyprland"
-user = "$USERNAME"
+# Launch Hyprland by default
+command = "Hyprland"
+user = "USERNAME"
+
+[greeter]
+# Use GTKGreet as greeter
+path = "/usr/bin/gtkgreet"
+user = "USERNAME"
 GREETD
+
+sudo systemctl enable greetd
 
 
 ### === SETUP RANGER IMAGE PREVIEW === ###

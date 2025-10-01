@@ -69,18 +69,20 @@ chsh -s /bin/zsh "$USERNAME"
 echo "==> Configuring greetd with GTKGreet and GB keyboard..."
 sudo mkdir -p /etc/greetd
 sudo tee /etc/greetd/config.toml > /dev/null <<EOF
+[terminal]
+vt = 1
+
 [default_session]
-# Launch Hyprland with GB keyboard
 command = "setxkbmap gb && Hyprland"
 user = "$USERNAME"
 
 [greeter]
-# Use GTKGreet
 path = "/usr/bin/gtkgreet"
 user = "$USERNAME"
 EOF
 
 sudo systemctl enable greetd
+
 
 
 [default_session]

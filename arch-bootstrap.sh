@@ -35,8 +35,11 @@ sudo pacman -S --needed --noconfirm \
   wl-clipboard grim slurp swaybg dunst \
   starship \
   zsh-autosuggestions zsh-syntax-highlighting \
-  base-devel
-  go
+  base-devel \
+  go \
+  tmux
+
+tmux
 
 ### === NETWORKMANAGER & NM-APPLET SETUP === ###
 echo "==> Enabling NetworkManager service..."

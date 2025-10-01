@@ -22,7 +22,7 @@ sudo pacman -S --needed --noconfirm \
   alacritty \
   networkmanager \
   pipewire pipewire-pulse pipewire-alsa wireplumber \
-  hyprland hyprpaper xwayland \
+  hyprland hyprpaper xorg-xwayland \
   openbox \
   greetd greetd-gtkgreet \
   wofi waybar \

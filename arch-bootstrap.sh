@@ -20,7 +20,7 @@ echo "==> Installing essential packages..."
 sudo pacman -S --needed --noconfirm \
   git vim zsh bash wget curl unzip stow \
   alacritty \
-  networkmanager \
+  networkmanager nm-applet \
   pipewire pipewire-pulse pipewire-alsa wireplumber \
   hyprland hyprpaper xorg-xwayland \
   openbox \
@@ -37,8 +37,26 @@ sudo pacman -S --needed --noconfirm \
   zsh-autosuggestions zsh-syntax-highlighting \
   base-devel
 
-echo "==> Enabling NetworkManager..."
-sudo systemctl enable --now NetworkManager
+### === NETWORKMANAGER & NM-APPLET SETUP === ###
+echo "==> Enabling NetworkManager service..."
+sudo systemctl enable NetworkManager
+
+echo "==> Setting up nm-applet to autostart in Openbox..."
+OB_AUTOSTART="/home/$USERNAME/.config/openbox/autostart"
+mkdir -p "$(dirname "$OB_AUTOSTART")"
+if ! grep -Fxq "nm-applet &" "$OB_AUTOSTART" 2>/dev/null; then
+    echo "nm-applet &" >> "$OB_AUTOSTART"
+fi
+
+echo "==> Setting up nm-applet to autostart in Hyprland..."
+HYPR_AUTOSTART="/home/$USERNAME/.config/hypr/autostart.sh"
+mkdir -p "$(dirname "$HYPR_AUTOSTART")"
+if ! grep -Fxq "nm-applet &" "$HYPR_AUTOSTART" 2>/dev/null; then
+    echo "nm-applet &" >> "$HYPR_AUTOSTART"
+fi
+
+sudo -u "$USERNAME" chmod +x "$OB_AUTOSTART" "$HYPR_AUTOSTART"
+
 
 echo "==> Enabling PipeWire (user-level)..."
 loginctl enable-linger "$USERNAME"
